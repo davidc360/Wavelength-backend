@@ -6,6 +6,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+@app.route('/create')
+def create():
+    return uuid.uuid4().hex[:4], 200
+
 @socketio.on('connect')
 def connection():
     print('connected')
@@ -13,7 +17,6 @@ def connection():
 @socketio.on('join_room')
 def join_room_and_notify(data):
     room = data['room']
-    print('join_room requested')
     join_room(room)
 
     socketio.emit('connection_message', {
@@ -29,13 +32,11 @@ def handle_message(data):
         'message': data['message']
     })
 
-@socketio.on('json')
-def handle_json(json):
-    print('received json: ' + str(json))
-
-@app.route('/create')
-def create():
-    return uuid.uuid4().hex[:4], 200
+@socketio.on('update_link')
+def update_link(data):
+    socketio.emit('update_link', {
+        'link': data['link']
+    })
 
 if __name__ == '__main__':
     socketio.run(app, port=2000)
