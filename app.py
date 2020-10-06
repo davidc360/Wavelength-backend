@@ -4,6 +4,7 @@ import uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+# socketio = SocketIO(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route('/create')
@@ -36,7 +37,17 @@ def handle_message(data):
 def update_link(data):
     socketio.emit('update_link', {
         'link': data['link']
-    })
+    }, room=data['room'])
+
+@socketio.on('pause_video')
+def pause_all(data):
+    socketio.emit('pause_video', {
+    }, room=data['room'])
+
+@socketio.on('play_video')
+def play_all(data):
+    socketio.emit('play_video', {
+    }, room=data['room'])
 
 if __name__ == '__main__':
-    socketio.run(app, port=2000)
+    socketio.run(app, port=8000)
