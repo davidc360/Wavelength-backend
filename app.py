@@ -3,6 +3,7 @@ from flask_pymongo import PyMongo
 from flask_socketio import SocketIO, join_room, leave_room
 import uuid
 import json
+import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -32,10 +33,13 @@ def join_room_and_notify(data):
     messages = mongo.db.rooms.find_one({
         'token': room
         })['messages']
-    print(messages)
     socketio.emit('sync_chat', {
         'messages': messages
     }, room)
+
+    socketio.emit('request_timestamp', {
+    }, room)
+
 
 @socketio.on('chat_message')
 def handle_message(data):
@@ -72,12 +76,18 @@ def update_link(data):
 def play_all(data):
     socketio.emit('play_video', {
         'timestamp': data['timestamp'],
-        'actionTime': data['actionTime']
+        'actionStamp': datetime.datetime.now().timestamp()*1000
     }, room=data['room'])
 
 @socketio.on('pause_video')
 def pause_all(data):
     socketio.emit('pause_video', {
+    }, room=data['room'])
+
+@socketio.on('update_timestamp')
+def set_timestamp(data):
+    socketio.emit('sync_timestamp', {
+        'timestamp': data['timestamp']
     }, room=data['room'])
 
 if __name__ == '__main__':
