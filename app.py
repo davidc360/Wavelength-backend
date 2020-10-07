@@ -7,7 +7,8 @@ import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-app.config["MONGO_URI"] = "mongodb://localhost:27017/wavelength"
+# app.config["MONGO_URI"] = "mongodb://localhost:27017/wavelength"
+app.config["MONGO_URI"] = "mongodb+srv://david:today123@cluster0.peg5c.gcp.mongodb.net/wavelength?retryWrites=true&w=majority"
 mongo = PyMongo(app)
 # socketio = SocketIO(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -15,10 +16,6 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 @app.route('/create')
 def create():
     return uuid.uuid4().hex[:4], 200
-
-@socketio.on('connect')
-def connection():
-    print('connected')
 
 @socketio.on('join_room')
 def join_room_and_notify(data):
