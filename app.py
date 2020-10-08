@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from flask_pymongo import PyMongo
 from flask_socketio import SocketIO, join_room, leave_room
 import uuid
@@ -12,6 +12,10 @@ app.config["MONGO_URI"] = "mongodb+srv://david:today123@cluster0.peg5c.gcp.mongo
 mongo = PyMongo(app)
 # socketio = SocketIO(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+@app.route('/')
+def home():
+    return send_from_directory('templates', 'index.html')
 
 @app.route('/create')
 def create():
@@ -27,15 +31,22 @@ def join_room_and_notify(data):
         'photo_url': data['photo_url'],
     }, room)
 
-    messages = mongo.db.rooms.find_one({
+    room_data = mongo.db.rooms.find_one({
         'token': room
-        })['messages']
-    socketio.emit('sync_chat', {
-        'messages': messages
-    }, room)
+        })
+    
+    if not room_data:
+       mongo.db.rooms.insert_one({'token': room})
+    else:
+        messages = room_data['messages']
+        socketio.emit('sync_chat', {
+            'messages': messages
+        }, room)
 
     socketio.emit('request_timestamp', {
     }, room)
+
+    send_timestamp(data)
 
 
 @socketio.on('chat_message')
@@ -65,9 +76,22 @@ def handle_message(data):
 
 @socketio.on('update_link')
 def update_link(data):
+    room=data['room']
     socketio.emit('update_link', {
         'link': data['link']
     }, room=data['room'])
+
+    mongo.db.rooms.update_one(
+        {
+            'token': room 
+        },
+        {
+            '$set': {
+                'link': data['link']
+            }
+        },
+        upsert=True
+    )
 
 @socketio.on('play_video')
 def play_all(data):
@@ -86,6 +110,17 @@ def set_timestamp(data):
     socketio.emit('sync_timestamp', {
         'timestamp': data['timestamp']
     }, room=data['room'])
+
+@socketio.on('get_video_link')
+def send_timestamp(data):
+    room = data['room']
+    video_link = mongo.db.rooms.find_one({
+        'token': room
+    })['link']
+    print(video_link)
+    socketio.emit('set_video_link', {
+        'video_link': video_link
+    }, room)
 
 if __name__ == '__main__':
     socketio.run(app, port=8000)
