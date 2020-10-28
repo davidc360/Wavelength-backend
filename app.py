@@ -43,10 +43,6 @@ def join_room_and_notify(data):
             'messages': messages
         }, room)
 
-
-    socketio.emit('request_timestamp', {
-    }, room)
-
     sync_video_link(data)
 
 @socketio.on('chat_message')
