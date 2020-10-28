@@ -46,8 +46,7 @@ def join_room_and_notify(data):
     socketio.emit('request_timestamp', {
     }, room)
 
-    send_timestamp(data)
-
+    set_timestamp(data)
 
 @socketio.on('chat_message')
 def handle_message(data):
@@ -118,7 +117,7 @@ def sync_video_link(data):
         'token': room
     })['link']
     socketio.emit('sync_video_link', {
-        'video_link': video_link
+        'link': video_link
     }, room)
 
 if __name__ == '__main__':
