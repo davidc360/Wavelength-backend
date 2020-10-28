@@ -34,7 +34,7 @@ def join_room_and_notify(data):
     room_data = mongo.db.rooms.find_one({
         'token': room
         })
-    
+
     if not room_data:
        mongo.db.rooms.insert_one({'token': room})
     else:
@@ -43,10 +43,11 @@ def join_room_and_notify(data):
             'messages': messages
         }, room)
 
+
     socketio.emit('request_timestamp', {
     }, room)
 
-    set_timestamp(data)
+    sync_video_link(data)
 
 @socketio.on('chat_message')
 def handle_message(data):
@@ -119,6 +120,10 @@ def sync_video_link(data):
     socketio.emit('sync_video_link', {
         'link': video_link
     }, room)
+
+@socketio.on('request_timestamp')
+def request_timestamp(data):
+    socketio.emit('request_timestamp', {})
 
 if __name__ == '__main__':
     socketio.run(app, port=8000)
