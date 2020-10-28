@@ -15,7 +15,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 @app.route('/')
 def home():
-    return send_from_directory('templates', 'index.html')
+    return 'Homepage :)'
 
 @app.route('/create')
 def create():
@@ -111,14 +111,13 @@ def set_timestamp(data):
         'timestamp': data['timestamp']
     }, room=data['room'])
 
-@socketio.on('get_video_link')
-def send_timestamp(data):
+@socketio.on('sync_video_link')
+def sync_video_link(data):
     room = data['room']
     video_link = mongo.db.rooms.find_one({
         'token': room
     })['link']
-    print(video_link)
-    socketio.emit('set_video_link', {
+    socketio.emit('sync_video_link', {
         'video_link': video_link
     }, room)
 
